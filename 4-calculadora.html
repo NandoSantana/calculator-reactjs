@@ -160,7 +160,7 @@
 
             return (
                 <CalculatorContext.Provider
-                    value={{history, updateHistory}}
+                    value={{history, updateHistory, setHistory}}
                 >
                     {children}
                 </CalculatorContext.Provider>
@@ -192,7 +192,6 @@
             const {updateHistory} = React.useContext(CalculatorContext);
 
             function doOperation(input){
-                console.log(input);
                 if(input === 'C'){
                     setOperation('');
                     setResult('');
@@ -274,6 +273,21 @@
 
         function OperationHistory(){
             const {history} = React.useContext(CalculatorContext);
+            const{setHistory} = React.useContext(CalculatorContext);
+            console.log();
+            const handleDelete = (indexToRemove) => {
+                // 1. Criamos a nova lista filtrando o item pelo índice
+                const newHistory = history.filter((_, index) => index !== indexToRemove);
+                
+                console.log(history);
+                // 2. Atualizamos o estado do React
+                
+                const historyStorageKey = 'history';
+                // 3. Sincronizamos o LocalStorage com a lista ATUALIZADA
+                localStorage.setItem(historyStorageKey, JSON.stringify(newHistory));
+                setHistory(newHistory || '[]');
+                return newHistory;
+            };
 
             return (
                 <Card className="py-10 px-8">
@@ -281,10 +295,16 @@
                     {history.length > 0 ? 
                         (
                         <ul className="flex flex-col gap-3">
-                            {
-                                history.map((value, index) => <Text key={`item-${index}`} as="li"> {value} </Text> )
-                            }
-                        
+                            {history.map((value, index) => (
+                                /* 2. Adicione a 'key' no elemento pai (Fragment) e não no filho */
+                                <div key={`item-${index}`} className="flex justify-between">
+                            <Text as="li">{value}</Text>
+                                {/* 3. Use onClick com arrow function para não disparar no render */}
+                                <button  onClick={() => handleDelete(index)} className="text-red-500">
+                                    -
+                                </button>
+                            </div>
+                            ))}
                         </ul>
                         ) : (
                             <Text as="p" variant="muted">Nenhuma operação recente.</Text>
